@@ -4,7 +4,7 @@ build_raylib: #build once
 	sh ./scripts/build_raylib.sh
 
 compile: #assume already ran build_raylib
-	g++ -std=c++20 -Wall -Wextra main.cpp \
+	g++ -std=c++20 -Wall -Wextra src/main.cpp \
 	external/raylib/src/libraylib.a \
 	-Iexternal/raylib/src \
 	-lGL -lm -lpthread -ldl -lrt -lX11 \

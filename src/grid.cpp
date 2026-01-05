@@ -1,4 +1,7 @@
-// white grid doesn't look nice, good for debug
+#include "../external/raylib/src/raylib.h"
+#include "config.h"
+
+// use for debug
 void DrawSandGrid(Color color) {
   // horizontal grid lines
   for (int i = 0; i <= ROWS; i++) {
