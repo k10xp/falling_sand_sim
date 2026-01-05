@@ -4,6 +4,7 @@
 const int SCREEN_WIDTH = 900;
 const int SCREEN_HEIGHT = 600;
 const int TARGET_FPS = 60;
+const char *TITLE = "Falling Sand Simulation";
 
 // grid calculations
 const int ROWS = SCREEN_HEIGHT / 8;
@@ -19,22 +20,67 @@ const int SPREAD = 2; // +1 to each side of base every SPREAD rows
 // simple cell-state array: 0 = empty, 1 = green
 int grid[ROWS][COLS] = {0};
 
-void DrawSandGrid(Color color) {
-  // horizontal grid lines
-  for (int i = 0; i <= ROWS; i++) {
-    int posY = i * CELL_HEIGHT;
-    DrawLine(0, posY, SCREEN_WIDTH, posY, color);
-  }
+// grain = 1 pixel, pile = many grains as isoceles triangle
+void UpdateSand(void) {
+  // process from bottom to top so each grain moves at most once per frame
+  for (int r = ROWS - 2; r >= 0; r--) { // skip last row (cannot fall further)
+    for (int c = 0; c < COLS; c++) {
+      if (grid[r][c] != 1)
+        continue;
 
-  // vertical grid lines
-  for (int i = 0; i <= COLS; i++) {
-    int posX = i * CELL_WIDTH;
-    DrawLine(posX, 0, posX, SCREEN_HEIGHT, color);
+      // check cell below, fill if empty
+      if (grid[r + 1][c] == 0) {
+        grid[r + 1][c] = 1;
+        grid[r][c] = 0;
+        continue;
+      }
+
+      // check diagonal if cell below was filled
+      bool moved = false;
+
+      // pick L vs R diagonal to fill at random
+      if (GetRandomValue(0, 1) == 0) {
+        // down-left
+        if (c > 0 && grid[r + 1][c - 1] == 0) {
+          grid[r + 1][c - 1] = 1;
+          grid[r][c] = 0;
+          moved = true;
+        } else if (c < COLS - 1 && grid[r + 1][c + 1] == 0) {
+          grid[r + 1][c + 1] = 1;
+          grid[r][c] = 0;
+          moved = true;
+        }
+      } else {
+        // down-right
+        if (c < COLS - 1 && grid[r + 1][c + 1] == 0) {
+          grid[r + 1][c + 1] = 1;
+          grid[r][c] = 0;
+          moved = true;
+        } else if (c > 0 && grid[r + 1][c - 1] == 0) {
+          grid[r + 1][c - 1] = 1;
+          grid[r][c] = 0;
+          moved = true;
+        }
+      }
+
+      // stay if can't move anywhere else
+      // suppress unused-variable warning if unused (fill cell below)
+      (void)moved;
+    }
   }
 }
 
+void DrawTitle(const char *title) {
+  int fontSize = 20;
+  int textWidth = MeasureText(title, fontSize);
+  int titleX = (SCREEN_WIDTH - textWidth) / 2;
+  int titleY = 10;
+
+  DrawText(title, titleX, titleY, fontSize, RAYWHITE);
+}
+
 int main(void) {
-  InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "Falling sand");
+  InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, TITLE);
   SetTargetFPS(TARGET_FPS);
 
   while (!WindowShouldClose()) {
@@ -69,11 +115,13 @@ int main(void) {
       }
     }
 
+    UpdateSand();
+
     BeginDrawing();
     ClearBackground(BLACK);
+    DrawTitle(TITLE);
 
     // toggle green
-    // TODO: alternative to nested for loop
     for (int r = 0; r < ROWS; r++) {
       for (int c = 0; c < COLS; c++) {
         if (grid[r][c] == 1) {
@@ -83,8 +131,7 @@ int main(void) {
       }
     }
 
-    // grid: doesn't look nice, good for debug
-    // DrawSandGrid(WHITE);
+    // DrawSandGrid(WHITE); //in grid.cpp
 
     EndDrawing();
   }
