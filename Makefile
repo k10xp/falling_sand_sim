@@ -1,11 +1,9 @@
-.PHONY: build_raylib compile_sim run_sim
+.PHONY: build_raylib compile run sm_download sm_update
 
 build_raylib: #build once
-	mkdir -p build
-	cd external/raylib/src
-	make PLATFORM=PLATFORM_DESKTOP -B
+	sh ./scripts/build_raylib.sh
 
-compile_sim: #assume already ran build_raylib
+compile: #assume already ran build_raylib
 	g++ main.cpp \
 	external/raylib/src/libraylib.a \
 	-Iexternal/raylib/src \
@@ -13,5 +11,11 @@ compile_sim: #assume already ran build_raylib
 	-no-pie -D_DEFAULT_SOURCE \
 	-o build/sand_sim
 
-run_sim: compile_sim #compile and run, USE THIS
+run: compile #compile and run, USE THIS
 	./build/sand_sim
+
+sm_download: #download submodules from remote, first run
+	git submodule update --init
+
+sm_update:
+	git submodule update --remote
