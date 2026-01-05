@@ -1,16 +1,20 @@
 #include "./external/raylib/src/raylib.h"
 
+// app params
 const int SCREEN_WIDTH = 900;
 const int SCREEN_HEIGHT = 600;
 const int TARGET_FPS = 60;
 
-// number of cells
+// grid calculations
 const int ROWS = SCREEN_HEIGHT / 8;
 const int COLS = SCREEN_WIDTH / 8;
 
-// create pixel instead of grid
 const int CELL_WIDTH = SCREEN_WIDTH / COLS;
 const int CELL_HEIGHT = SCREEN_HEIGHT / ROWS;
+
+// sand params, want isoceles triangle
+const int PILE_HEIGHT = 6;
+const int SPREAD = 2; // +1 to each side of base every SPREAD rows
 
 // simple cell-state array: 0 = empty, 1 = green
 int grid[ROWS][COLS] = {0};
@@ -34,17 +38,34 @@ int main(void) {
   SetTargetFPS(TARGET_FPS);
 
   while (!WindowShouldClose()) {
-    // click to turn pixel green
+    // click to add sand pile (clicked pixel is top of pile)
     if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
       Vector2 mouse = GetMousePosition();
 
-      // x is col, y is row
       int col = mouse.x / CELL_WIDTH;
       int row = mouse.y / CELL_HEIGHT;
 
-      // confirm in bounds
       if (row >= 0 && row < ROWS && col >= 0 && col < COLS) {
-        grid[row][col] = 1;
+        for (int dy = 0; dy < PILE_HEIGHT; dy++) {
+          int r = row + dy;
+          if (r < 0 || r >= ROWS)
+            break;
+
+          // +1 to each side of base every SPREAD rows
+          int halfWidth = dy / SPREAD;
+
+          int cStart = col - halfWidth;
+          int cEnd = col + halfWidth;
+
+          if (cStart < 0)
+            cStart = 0;
+          if (cEnd >= COLS)
+            cEnd = COLS - 1;
+
+          for (int c = cStart; c <= cEnd; c++) {
+            grid[r][c] = 1;
+          }
+        }
       }
     }
 
@@ -52,6 +73,7 @@ int main(void) {
     ClearBackground(BLACK);
 
     // toggle green
+    // TODO: alternative to nested for loop
     for (int r = 0; r < ROWS; r++) {
       for (int c = 0; c < COLS; c++) {
         if (grid[r][c] == 1) {
